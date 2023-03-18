@@ -7,7 +7,7 @@ const PUSH_CONFIG = {
    * @description 启用推送
    * @example true 启用推送 false 禁用推送
    */
-  enabled: false,
+  enabled: true,
   /**
    * @description 发送服务消息昵称
    */

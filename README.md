@@ -196,7 +196,7 @@ pnpm install
          └─Locales                           ✔
     ```
 
-- 在 Puppeteer 配置中，将 `executablePath` 字段值改为 `.local_chromium/chrome.exe`
+- 在 Puppeteer 配置中，将 ` ` 字段值改为 `.local_chromium/chrome.exe`
 
 </details>
 
