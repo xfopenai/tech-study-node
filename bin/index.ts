@@ -239,6 +239,7 @@ const runStudyJob = async (jobConfig: StudyJob, restJobs: Job[]) => {
   restJobs.sort((a, b) => a.time - b.time);
 };
 
+// 
 const startScheduleJobs = () => {
   const { jobs, studyJobs, refreshJobs } = createJobs();
 
@@ -299,7 +300,7 @@ const startScheduleJobs = () => {
         type: 'info',
       });
 
-      // 重启新一轮任务
+      // 重启新一轮任务 
       startScheduleJobs();
       return;
     }
@@ -332,8 +333,91 @@ const startScheduleJobs = () => {
   runJob();
 };
 
-(async function () {
-  startScheduleJobs();
+// 立即运行
+const startJobs = () => {
+  const { jobs, studyJobs, refreshJobs } = createJobs();
+
+  let effectiveJobs = jobs; 
+
+  effectiveJobs.forEach((job, index) => {
+    if (job.type === 'study') {
+      console.log(
+        chalk.bgYellow(
+          `${index + 1} 任务:  ${job.params.nick} - 学习任务`
+        )
+      );
+    } 
+  });
+
+  if (studyJobs.length) {
+    // 推送服务提示
+    shared.pushModalTips({
+      title: '服务提示',
+      content: [
+        '已开启任务!',
+        `今天剩余任务数: ${getHighlightHTML(studyJobs.length)} 个`,
+        '剩余任务信息: ',
+        getTableHTML(
+          ['用户', '时间'],
+          studyJobs.map((item) => [`${item.params.nick}`, `${item.params.timeText}`])
+        ),
+      ],
+      type: 'info',
+    });
+  }
+
+  const runJob = () => {
+    // 过滤掉无效的任务
+    effectiveJobs = effectiveJobs.filter((it) => it.type === 'study' || it.effective);
+
+    const jobConfig = effectiveJobs.shift();
+    // 所有任务已完成
+    if (!jobConfig) {
+      // 推送服务提示
+      shared.pushModalTips({
+        title: '服务提示',
+        content: ['已运行定时任务!', '今天定时任务均已完成!'],
+        type: 'info',
+      }); 
+      return;
+    }
+
+    // 运行下一个任务 则以当前时间往后 3 秒运行
+    const currentTime = Date.now();
+    const jobRunTime =new Date(currentTime + 1000 * 3);
+
+    console.log(
+      chalk.bgBlueBright(
+        `设置任务: [${formatDateTime(jobRunTime)}] | 任务类型：[${jobConfig.type}]`
+      )
+    );
+
+    schedule.scheduleJob(jobRunTime, async () => {
+      if (jobConfig.type === 'study') {
+        await runStudyJob(jobConfig, effectiveJobs).catch((err) => {
+          console.log('runStudyJob error', err);
+        });
+      } else {
+        await runRefreshJob(jobConfig, effectiveJobs).catch((err) => {
+          console.log('runRefreshJob', err);
+        });
+      }
+      runJob();
+    });
+  };
+
+  runJob();
+}
+
+(async function () { 
+  let config = SCHEDULE_CONFIG[0]; 
+   if(config.runNow){
+    startJobs();
+  }
+  else  {
+    startScheduleJobs();
+  } 
+  
   // 执行清除日志任务
   schedule.scheduleJob('0 0 0 * * ?', () => {
     // 清除日志

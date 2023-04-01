@@ -15,6 +15,11 @@ export type Schedule = {
    * @description 定时时间
    */
   cron: string | string[];
+
+    /**
+   * @description 立即运行
+   */
+  runNow: boolean;
   /**
    * @description 学习任务配置
    * @example [文章选读, 视听学习, 每日答题, 专项练习]
@@ -38,9 +43,10 @@ export type Schedule = {
  */
 export const SCHEDULE_CONFIG: Schedule[] = [
   {
-    nick: 'xxx',
+    nick: 'tech',
     token: 'xxxxxxxxxxxxxxxxxxxxxxxxxx',
     cron: '0 0 12 * * ?',
+    runNow: true,
     taskConfig: [true, true, true, true],
     paperExitAfterWrong: false,
     refreshCookieInterval: [60, 120],
